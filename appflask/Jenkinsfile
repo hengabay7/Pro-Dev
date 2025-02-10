@@ -9,14 +9,13 @@ pipeline {
                 // Common build steps
             }
         }
-        
+
         stage('Test') {
                 steps {                                    
                     echo "Running test_app.py on Jenkins agent"  
                     sh 'python3 -m unittest discover -s . -p "test_app.py" -v'
-                    }
-                }         
-        }
+            }
+        }                
         
         stage('Deploy') {
             when {
@@ -28,3 +27,4 @@ pipeline {
             }
         }
     }
+}

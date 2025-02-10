@@ -10,9 +10,8 @@ pipeline {
         }
         
         stage('Test') {
-                steps {
-                    // Run on all branches
-                    echo "Running unit tests for branch  ${env.BRANCH_NAME}"
+                steps {                
+                    sh 'python -m unittest discover -s . -p "test_*.py" -v'
                 }
 
         }

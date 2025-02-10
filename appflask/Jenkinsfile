@@ -21,10 +21,10 @@ pipeline {
         stage('Deploy') {
             when {
                 branch 'main'
+            }
             steps {
                 // Production deployment steps
                 echo "Deploying, branch: ${env.BRANCH_NAME}"
             }
         }
     }
-}

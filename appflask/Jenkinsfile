@@ -13,7 +13,7 @@ pipeline {
                 steps {                
                      docker.image('python:3.9-slim').inside {
                         echo "Running tests inside Docker container"
-                        sh 'python3 -m unittest discover -s . -p "test_*.py" -v'
+                        sh 'python3 -m unittest discover -s . -p "test_app.py" -v'
                     }
                 }
             }

@@ -5,7 +5,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo "Building for ${env.BRANCH_NAME}"
-                 sh "docker build . -t appflask:one"
+                 sh "docker build ./appflask -t appflask:one"
                 // Common build steps
             }
         }

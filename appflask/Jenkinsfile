@@ -11,14 +11,17 @@ pipeline {
         
         stage('Test') {
                 steps {                
-                    sh 'python3 -m unittest discover -s . -p "test_*.py" -v'
+                     docker.image('python:3.9-slim').inside {
+                        echo "Running tests inside Docker container"
+                        sh 'python3 -m unittest discover -s . -p "test_*.py" -v'
+                    }
                 }
+            }
         }
         
         stage('Deploy') {
             when {
                 branch 'main'
-            }
             steps {
                 // Production deployment steps
                 echo "Deploying, branch: ${env.BRANCH_NAME}"

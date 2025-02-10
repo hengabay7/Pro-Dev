@@ -1,4 +1,5 @@
 FROM alpine:3.21.2
+FROM python:3.9-slim
 WORKDIR /app
 RUN apk update
 RUN apk add --no-cache python3 py3-pip

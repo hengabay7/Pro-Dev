@@ -5,7 +5,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo "Building for ${env.BRANCH_NAME}"
-                 sh "docker build ./appflask -t appflask:one"
+                 sh "docker build . -t appflask:one"
                 // Common build steps
             }
         }
@@ -13,7 +13,7 @@ pipeline {
         stage('Test') {
                 steps {                                    
                     echo "Running test_app.py on Jenkins agent"  
-                    sh 'python3 -m unittest discover -s . -p "test_app.py" -v'
+                    sh 'docker run -it appflask:one sh -c "python3 -m unittest discover -s . -p test_app.py" -v'
             }
         }                
         

@@ -5,18 +5,17 @@ pipeline {
         stage('Build') {
             steps {
                 echo "Building for ${env.BRANCH_NAME}"
+                 sh "docker build . -t appflask:one"
                 // Common build steps
             }
         }
         
         stage('Test') {
-                steps {                
-                     docker.image('python:3.9-slim').inside {
-                        echo "Running tests inside Docker container"
-                        sh 'python3 -m unittest discover -s . -p "test_app.py" -v'
+                steps {                                    
+                    echo "Running test_app.py on Jenkins agent"  
+                    sh 'python3 -m unittest discover -s . -p "test_app.py" -v'
                     }
-                }
-            }
+                }         
         }
         
         stage('Deploy') {

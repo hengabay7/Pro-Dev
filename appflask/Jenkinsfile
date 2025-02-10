@@ -13,7 +13,7 @@ pipeline {
         stage('Test') {
                 steps {                                    
                     echo "Running test_app.py on Jenkins agent"  
-                    sh 'docker run -it appflask:one sh -c "python3 -m unittest discover -s . -p test_app.py" -v'
+                    sh 'docker run -it appflask:one sh -c "python3 -m unittest discover -s . -p test_app.py" '
             }
         }                
         

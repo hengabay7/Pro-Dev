@@ -1,7 +1,7 @@
 pipeline {
     agent any
 
-     environment {
+    environment {
         TF_VERSION = "1.6.0"
         TF_DIR = "./Terraform"  
     }
@@ -12,8 +12,8 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/hengabay7/Pro-Dev.git'
             }
         }
-    
-    stage('Initialize Terraform') {
+
+        stage('Initialize Terraform') {
             steps {
                 dir("${TF_DIR}") {
                     sh 'terraform init'
@@ -21,7 +21,7 @@ pipeline {
             }
         }
 
-    stage('Plan Terraform') {
+        stage('Plan Terraform') {
             steps {
                 dir("${TF_DIR}") {
                     sh 'terraform plan -out=tfplan'
@@ -29,7 +29,7 @@ pipeline {
             }
         }
 
-    stage('Apply Terraform') {
+        stage('Apply Terraform') {
             steps {
                 dir("${TF_DIR}") {
                     input message: 'Apply Terraform changes?', ok: 'Apply'
@@ -37,32 +37,37 @@ pipeline {
                 }
             }
         }
-    }
 
-
-    
-    stages {
-        stage('Build') {
+        stage('Build Docker Image') {
             steps {
-                echo "Building for ${env.BRANCH_NAME}"
-                 sh "docker build ./appflask -t appflask:one"               
+                echo "Building Docker image for branch: ${env.BRANCH_NAME}"
+                sh "docker build -t appflask:one ./appflask"
             }
         }
 
-        stage('Test') {
-                steps {                                    
-                    echo "Running test_app.py on Jenkins agent"  
-                    sh 'docker run -t appflask:one sh -c "python3 -m unittest discover -s . -p test_app.py" '
+        stage('Test Application') {
+            steps {                                  
+                echo "Running tests using unittest framework"
+                sh 'docker run -t appflask:one sh -c "python3 -m unittest discover -s . -p test_app.py"'
             }
         }                
-        
-        stage('Deploy') {
+
+        stage('Deploy Application') {
             when {
                 branch 'main'
             }
             steps {
-                echo "Deploying, branch: ${env.BRANCH_NAME}"
+                echo "Deploying application from branch: ${env.BRANCH_NAME}"
             }
+        }
+    }
+
+    post {
+        success {
+            echo "Pipeline executed successfully!"
+        }
+        failure {
+            echo "Pipeline failed! Check logs for details."
         }
     }
 }

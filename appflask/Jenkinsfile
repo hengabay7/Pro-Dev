@@ -1,12 +1,51 @@
 pipeline {
     agent any
+
+     environment {
+        TF_VERSION = "1.6.0"
+        TF_DIR = "./Terraform"  
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/hengabay7/Pro-Dev.git'
+            }
+        }
+    
+    stage('Initialize Terraform') {
+            steps {
+                dir("${TF_DIR}") {
+                    sh 'terraform init'
+                }
+            }
+        }
+
+    stage('Plan Terraform') {
+            steps {
+                dir("${TF_DIR}") {
+                    sh 'terraform plan -out=tfplan'
+                }
+            }
+        }
+
+    stage('Apply Terraform') {
+            steps {
+                dir("${TF_DIR}") {
+                    input message: 'Apply Terraform changes?', ok: 'Apply'
+                    sh 'terraform apply -auto-approve tfplan'
+                }
+            }
+        }
+    }
+
+
     
     stages {
         stage('Build') {
             steps {
                 echo "Building for ${env.BRANCH_NAME}"
-                 sh "docker build ./appflask -t appflask:one"
-                // Common build steps
+                 sh "docker build ./appflask -t appflask:one"               
             }
         }
 
@@ -22,7 +61,6 @@ pipeline {
                 branch 'main'
             }
             steps {
-                // Production deployment steps
                 echo "Deploying, branch: ${env.BRANCH_NAME}"
             }
         }

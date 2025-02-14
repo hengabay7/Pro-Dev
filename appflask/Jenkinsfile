@@ -13,6 +13,8 @@ pipeline {
             }
         }
 
+
+
         stage('Initialize Terraform') {
             steps {
                 dir("${TF_DIR}") {
@@ -38,7 +40,21 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage ('Install Terraform') {
+            steps {
+        sh '''
+        if ! command -v terraform &> /dev/null
+        then
+            wget https://releases.hashicorp.com/terraform/1.6.0/terraform_1.6.0_linux_amd64.zip
+            unzip terraform_1.6.0_linux_amd64.zip
+            sudo mv terraform /usr/local/bin/
+        fi
+        terraform --version
+        '''
+            }
+        }
+
+        stage('Build') {
             steps {
                 echo "Building Docker image for branch: ${env.BRANCH_NAME}"
                 sh "docker build -t appflask:one ./appflask"
@@ -52,7 +68,7 @@ pipeline {
             }
         }                
 
-        stage('Deploy Application') {
+        stage('Deploy') {
             when {
                 branch 'main'
             }

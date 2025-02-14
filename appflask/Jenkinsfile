@@ -14,7 +14,16 @@ pipeline {
         }
 
 
-
+    stage('Check Terraform Directory') {
+        steps {
+             sh '''
+             if [ ! -d "${TF_DIR}" ]; then
+                echo "ERROR: Terraform directory ${TF_DIR} not found!"
+                exit 1
+             fi
+             '''
+            }
+        }
         stage('Initialize Terraform') {
             steps {
                 dir("${TF_DIR}") {

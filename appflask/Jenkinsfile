@@ -4,6 +4,9 @@ pipeline {
     environment {
         TF_VERSION = "1.6.0"
         TF_DIR = "Terraform"  
+        AWS_ACCESS_KEY_ID = credentials('AKIATJB5FHEOPZP7AFVH')
+        AWS_SECRET_ACCESS_KEY = credentials('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')
+        AWS_DEFAULT_REGION = "us-east-1"
     }
 
     stages {

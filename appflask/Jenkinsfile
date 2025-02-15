@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/hengabay7/Pro-Dev.git'
+                git branch: 'main',credentialsId: 'd9e0db57-defb-404a-8ba5-4da800991f9b', url: 'https://github.com/hengabay7/Pro-Dev.git'
             }
         }
 

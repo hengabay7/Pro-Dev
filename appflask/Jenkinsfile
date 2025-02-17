@@ -36,7 +36,8 @@ pipeline {
         stage('Plan Terraform') {
             steps {
                 dir("${TF_DIR}") {
-                    sh 'terraform plan -out=tfplan'
+                    
+                    sh 'terraform plan -out=tfplan ; pwd'
                 }
             }
         }

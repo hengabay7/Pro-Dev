@@ -82,6 +82,15 @@ module "ec2_instance" {
   instance_type = "t2.micro"
   key_name      = "MykeyPair" 
 
+  user_data = <<-EOF
+              #!/bin/bash
+              sudo apt update -y
+              sudo apt install -y docker.io
+              sudo systemctl start docker
+              sudo systemctl enable docker
+              sudo usermod -aG docker ubuntu
+              EOF
+
   
   subnet_id       = module.vpc.public_subnets[0] 
   vpc_security_group_ids = [aws_security_group.example_sg.id]

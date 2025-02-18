@@ -26,9 +26,16 @@ pipeline {
         }
 
         stage('Initialize Terraform') {
-            steps {
+             steps {
                 dir("${TF_DIR}") {
-                    sh 'terraform init'
+                    script {
+                        def isInitialized = sh(script: "test -d .terraform && echo 'true' || echo 'false'", returnStdout: true).trim()
+                        if (isInitialized == 'false') {
+                            sh 'terraform init'
+                        } else {
+                            echo "Terraform is already initialized. Skipping init."
+                        }
+                    }
                 }
             }
         }

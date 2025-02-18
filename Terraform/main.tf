@@ -107,3 +107,18 @@ module "ec2_instance" {
     Name = "example-amazon-linux-instance"
   }
 }
+
+
+resource "aws_eip" "eip" {
+  domain = "vpc"
+}
+
+resource "aws_eip_association" "eip_attach" {
+  instance_id   = module.ec2_instance.id
+  allocation_id = aws_eip.eip.id
+}
+
+output "external_ip" {
+  value       = aws_eip.eip.public_ip
+  description = "The Elastic IP assigned to the EC2 instance"
+}

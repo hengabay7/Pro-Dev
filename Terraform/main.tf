@@ -87,7 +87,7 @@ module "ec2_instance" {
 
   ami           = data.aws_ami.amazon_linux.id 
   instance_type = "t2.micro"
-  key_name      = "MykeyPair" 
+  key_name      = "keypaircicd" 
 
   user_data = <<-EOF
               #!/bin/bash

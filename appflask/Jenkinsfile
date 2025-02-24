@@ -91,7 +91,7 @@ pipeline {
              steps {
          script {           
              def ec2_ip = "107.20.79.58"
-             sshagent(['my-ssh-key']) {
+             sshagent(['keypaircicd']) {
                 sh """
                 ssh -o StrictHostKeyChecking=no ec2-user@${ec2_ip} << EOF
                 echo "Stopping old container..."

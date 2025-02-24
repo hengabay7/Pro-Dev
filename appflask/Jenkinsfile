@@ -90,17 +90,21 @@ pipeline {
             }
              steps {
          script {           
-             def ec2_ip = "107.20.79.58"
+              def ec2_ip = "107.20.79.58"
+             echo "Deploying to EC2 at ${ec2_ip}..."
              sshagent(['keypaircicd']) {
                 sh """
+                ssh -o StrictHostKeyChecking=no ec2-user@${ec2_ip} 'echo SSH connected successfully'
                 ssh -o StrictHostKeyChecking=no ec2-user@${ec2_ip} << EOF
                 echo "Stopping old container..."
-                docker stop appflask || true
-                docker rm appflask || true
+                docker stop appflask || echo "Container not found"
+                docker rm appflask || echo "No container to remove"
                 echo "Pulling new image..."
                 docker pull hengabay7/appflask:latest
                 echo "Running new container..."
                 docker run -d --name appflask -p 8080:80 hengabay7/appflask:latest
+                echo "Checking running containers..."
+                docker ps
                 EOF
                 """
                 }

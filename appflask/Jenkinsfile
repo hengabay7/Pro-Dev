@@ -90,7 +90,7 @@ pipeline {
             }
              steps {
          script {           
-            def ec2_ip = sh(script: "aws ec2 describe-addresses --query 'Addresses[*].PublicIp' --output text", returnStdout: true).trim()
+            def ec2_ip = sh(script: "aws ec2 describe-addresses --region us-east-1 --query 'Addresses[*].PublicIp' --output text", returnStdout: true).trim()
             sshagent(['my-ssh-key']) {
                 sh """
                 ssh -o StrictHostKeyChecking=no ec2-user@${ec2_ip} << EOF

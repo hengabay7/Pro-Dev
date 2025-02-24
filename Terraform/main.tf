@@ -90,13 +90,15 @@ module "ec2_instance" {
   key_name      = "keypaircicd" 
 
   user_data = <<-EOF
-              #!/bin/bash
-              sudo apt update -y
-              sudo apt install -y docker.io
-              sudo systemctl start docker
-              sudo systemctl enable docker
-              sudo usermod -aG docker ubuntu
-              EOF
+    #!/bin/bash
+    sudo yum update -y
+    sudo amazon-linux-extras enable docker
+    sudo yum install -y docker
+    sudo systemctl start docker
+    sudo systemctl enable docker
+    sudo usermod -aG docker ec2-user
+    echo "Docker installed successfully" > /home/ec2-user/docker_installed.txt
+  EOF
 
   
   subnet_id       = module.vpc.public_subnets[0] 

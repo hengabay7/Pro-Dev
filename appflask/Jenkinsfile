@@ -89,8 +89,8 @@ pipeline {
                 branch 'main'
             }
              steps {
-        script {           
-            def ec2_ip = sh(script: "terraform output -raw external_ip", returnStdout: true).trim()
+         script {           
+            def ec2_ip = sh(script: "aws ec2 describe-addresses --query 'Addresses[*].PublicIp' --output text", returnStdout: true).trim()
             sshagent(['my-ssh-key']) {
                 sh """
                 ssh -o StrictHostKeyChecking=no ec2-user@${ec2_ip} << EOF
@@ -103,11 +103,11 @@ pipeline {
                 docker run -d --name appflask -p 8080:80 hengabay7/appflask:latest
                 EOF
                 """
+                }
             }
         }
     }
 }
-    }
 
     post {
         success {

@@ -91,6 +91,8 @@ module "ec2_instance" {
 
   user_data = <<-EOF
     #!/bin/bash
+    exec > /var/log/user-data.log 2>&1
+    echo "Starting Docker installation" 
     sudo yum update -y
     sudo amazon-linux-extras enable docker
     sudo yum install -y docker
@@ -99,6 +101,10 @@ module "ec2_instance" {
     sudo usermod -aG docker ec2-user
     echo "Docker installed successfully" > /home/ec2-user/docker_installed.txt
   EOF
+
+  tags = {
+    Name = "Docker-EC2"
+  }
 
   
   subnet_id       = module.vpc.public_subnets[0] 

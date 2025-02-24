@@ -65,6 +65,18 @@ pipeline {
             }
         }
 
+        stage('Push to Docker Hub') {
+            steps {
+                echo "Logging in to Docker Hub..."
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+        }
+            echo "Pushing Docker image to Docker Hub..."
+            sh "docker tag appflask:one hengabay7/appflask:latest"
+            sh "docker push hengabay7/appflask:latest"
+    }
+}
+
         stage('Test Application') {
             steps {                                  
                 echo "Running tests using unittest framework"
@@ -76,10 +88,25 @@ pipeline {
             when {
                 branch 'main'
             }
-            steps {
-                echo "Deploying application from branch: ${env.BRANCH_NAME}"
+             steps {
+        script {           
+            def ec2_ip = sh(script: "terraform output -raw external_ip", returnStdout: true).trim()
+            sshagent(['my-ssh-key']) {
+                sh """
+                ssh -o StrictHostKeyChecking=no ec2-user@${ec2_ip} << EOF
+                echo "Stopping old container..."
+                docker stop appflask || true
+                docker rm appflask || true
+                echo "Pulling new image..."
+                docker pull hengabay7/appflask:latest
+                echo "Running new container..."
+                docker run -d --name appflask -p 8080:80 hengabay7/appflask:latest
+                EOF
+                """
             }
         }
+    }
+}
     }
 
     post {

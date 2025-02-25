@@ -88,15 +88,27 @@ pipeline {
     when {
         branch 'main'
     }
+    stage('Deploy') {
+    when {
+        branch 'main'
+    }
     steps {
         script {
             echo "Fetching EC2 Elastic IP..."
             
             def ec2_ip = sh(
-                 script: "aws ec2 describe-addresses --region us-east-1 --query 'Addresses[0].PublicIp' --output text",
+                script: """
+                aws ec2 describe-addresses --region us-east-1 \
+                --filters "Name=instance-id,Values=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)" \
+                --query 'Addresses[0].PublicIp' --output text
+                """,
                 returnStdout: true
             ).trim()
             
+            if (ec2_ip == "" || ec2_ip == "None") {
+                error "No Elastic IP found for this instance!"
+            }
+
             echo "Deploying to EC2 at ${ec2_ip}..."
 
             sshagent(['keypaircicd']) {

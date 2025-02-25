@@ -55,12 +55,12 @@ pipeline {
 
         stage('Push to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                withDockerRegistry([credentialsId: 'docker-hub-credentials']) {
                     sh """
-                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
                     docker tag appflask:one hengabay7/appflask:latest
                     docker push hengabay7/appflask:latest
                     """
+                
                 }
             }
         }
@@ -124,12 +124,4 @@ pipeline {
         }
     }
 
-    post {
-        success {
-            echo "✅ Pipeline executed successfully!"
-        }
-        failure {
-            echo "❌ Pipeline failed! Check logs for details."
-        }
-    }
 }

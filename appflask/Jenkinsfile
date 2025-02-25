@@ -84,56 +84,53 @@ pipeline {
             }
         }                
 
-        stage('Deploy') {
-    when {
-        branch 'main'
-    }
-    stage('Deploy') {
-    when {
-        branch 'main'
-    }
-    steps {
-        script {
-            echo "Fetching EC2 Elastic IP..."
-            
-            def ec2_ip = sh(
-                script: """
-                aws ec2 describe-addresses --region us-east-1 \
-                --filters "Name=instance-id,Values=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)" \
-                --query 'Addresses[0].PublicIp' --output text
-                """,
-                returnStdout: true
-            ).trim()
-            
-            if (ec2_ip == "" || ec2_ip == "None") {
-                error "No Elastic IP found for this instance!"
-            }
 
-            echo "Deploying to EC2 at ${ec2_ip}..."
+        stages {
+        stage('Fetch Elastic IP') {
+            steps {
+                script {
+                    echo "Fetching EC2 Elastic IP..."
+                    
+                    def ec2_ip = sh(
+                        script: """
+                        aws ec2 describe-addresses --region us-east-1 \
+                        --filters "Name=instance-id,Values=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)" \
+                        --query 'Addresses[0].PublicIp' --output text
+                        """,
+                        returnStdout: true
+                    ).trim()
 
-            sshagent(['keypaircicd']) {
-                sh """
-                mkdir -p ~/.ssh
-                ssh-keyscan -H ${ec2_ip} >> ~/.ssh/known_hosts
-                chmod 644 ~/.ssh/known_hosts
-                ssh ec2-user@${ec2_ip} 'echo SSH connected successfully'
-                
-                ssh ec2-user@${ec2_ip} << 'EOF'
-                echo "Stopping old container..."
-                docker stop appflask || true
-                docker rm appflask || true
-                echo "Pulling new image..."
-                docker pull hengabay7/appflask:latest
-                echo "Running new container..."
-                docker run -d --name appflask -p 8080:80 --restart=always hengabay7/appflask:latest
-                echo "Checking running containers..."
-                docker ps
-                EOF
-                """
+                    if (!ec2_ip || ec2_ip == "None") {
+                        error "No Elastic IP found for this instance!"
+                    }
+
+                    echo "Elastic IP found: ${ec2_ip}"
+                    env.EC2_IP = ec2_ip
                 }
             }
         }
-    }
+
+
+       
+        stage('Deploy to EC2') {
+            steps {
+                sshagent(['keypaircicd']) {
+                    sh """
+                    echo "Deploying to EC2 at ${EC2_IP}..."
+
+                    ssh-keyscan -H ${EC2_IP} >> ~/.ssh/known_hosts
+                    ssh ec2-user@${EC2_IP} << 'EOF'
+                    docker stop appflask || true
+                    docker rm appflask || true
+                    docker pull hengabay7/appflask:latest
+                    docker run -d --name appflask -p 8080:80 --restart=always hengabay7/appflask:latest
+                    docker ps
+                    EOF
+                    """
+                }
+            }
+        }
+    } 
 }
 
     post {

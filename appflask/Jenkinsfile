@@ -6,7 +6,6 @@ pipeline {
         TF_DIR = "Terraform"
         AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
-        
     }
 
     stages {
@@ -96,35 +95,34 @@ pipeline {
             }
         }
 
-
         stage('Deploy to EC2') {
-    steps {
-        sshagent(['keypaircicd']) {
-            sh """
-            echo "Deploying to EC2 at ${EC2_IP}..."
+            steps {
+                sshagent(['keypaircicd']) {
+                    sh """
+                    echo "Deploying to EC2 at ${EC2_IP}..."
 
-            # הוספת השרת לרשימת ה־known_hosts כדי למנוע בעיות אימות
-            ssh-keyscan -H ${EC2_IP} >> ~/.ssh/known_hosts
-            
-            ssh ec2-user@${EC2_IP} << 'EOF'
-            echo "🔄 Stopping old container..."
-            docker stop appflask || true
-            docker rm appflask || true
+                    # הוספת השרת לרשימת ה־known_hosts כדי למנוע בעיות אימות
+                    ssh-keyscan -H ${EC2_IP} >> ~/.ssh/known_hosts
 
-            echo "⬇ Pulling new Docker image..."
-            docker pull hengabay7/appflask:latest
+                    ssh ec2-user@${EC2_IP} << 'EOF'
+                    echo "🔄 Stopping old container..."
+                    docker stop appflask || true
+                    docker rm appflask || true
 
-            echo "🚀 Running new container..."
-            docker run -d --name appflask -p 80:5000 --restart=always hengabay7/appflask:latest
+                    echo "⬇ Pulling new Docker image..."
+                    docker pull hengabay7/appflask:latest
 
-            echo "📋 Checking running containers..."
-            docker ps
-            EOF
-            """
-          }
-      }
+                    echo "🚀 Running new container..."
+                    docker run -d --name appflask -p 80:5000 --restart=always hengabay7/appflask:latest
+
+                    echo "📋 Checking running containers..."
+                    docker ps
+                    EOF
+                    """
+                }
+            }
+        }
     }
-}
 
     post {
         success {

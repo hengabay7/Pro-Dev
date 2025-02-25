@@ -16,6 +16,7 @@ pipeline {
         }
 
         
+
         stage('Initialize Terraform') {
             steps {
                 dir("${TF_DIR}") {
@@ -75,26 +76,27 @@ pipeline {
         stage('Fetch Elastic IP') {
             steps {
                 script {
-            echo "Fetching EC2 Elastic IP..."
-            
-            def ec2_ip = sh(
-                script: """
-                aws ec2 describe-addresses --region us-east-1 \
-                --filters "Name=instance-id,Values=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)" \
-                --query 'Addresses[0].PublicIp' --output text
-                """,
-                returnStdout: true
-            ).trim()
+                    echo "Fetching EC2 Elastic IP..."
+                    
+                    def ec2_ip = sh(
+                        script: """
+                        aws ec2 describe-addresses --region us-east-1 \
+                        --query 'Addresses[?Tags[?Key==`Name` && Value==`Your-EC2-Instance-Name`]].PublicIp' \
+                        --output text
+                        """,
+                        returnStdout: true
+                    ).trim()
 
-            if (!ec2_ip || ec2_ip == "None") {
-                error "❌ No Elastic IP found for this EC2 instance! Please allocate one."
-            }
+                    if (!ec2_ip || ec2_ip == "None") {
+                        error "No Elastic IP found for the specified EC2 instance!"
+                    }
 
-            echo "✅ Elastic IP found: ${ec2_ip}"
-            env.EC2_IP = ec2_ip
+                    echo "Elastic IP found: ${ec2_ip}"
+                    env.EC2_IP = ec2_ip
+                }
             }
         }
-    }
+
         stage('Deploy to EC2') {
             steps {
                 sshagent(['keypaircicd']) {

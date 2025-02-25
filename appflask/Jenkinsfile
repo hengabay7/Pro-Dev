@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         TF_VERSION = "1.6.0"
-        TF_DIR = "Terraform"  
+        TF_DIR = "Terraform"
         AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
     }
@@ -26,11 +26,12 @@ pipeline {
         }
 
         stage('Initialize Terraform') {
-             steps {
+            steps {
                 dir("${TF_DIR}") {
                     script {
                         def isInitialized = sh(script: "test -d .terraform && echo 'true' || echo 'false'", returnStdout: true).trim()
                         if (isInitialized == 'false') {
+                            echo "Terraform is not initialized. Running 'terraform init'..."
                             sh 'terraform init'
                         } else {
                             echo "Terraform is already initialized. Skipping init."
@@ -43,8 +44,7 @@ pipeline {
         stage('Plan Terraform') {
             steps {
                 dir("${TF_DIR}") {
-                    
-                    sh 'terraform plan -out=tfplan ; pwd'
+                    sh 'terraform plan -out=tfplan'
                 }
             }
         }
@@ -52,7 +52,6 @@ pipeline {
         stage('Apply Terraform') {
             steps {
                 dir("${TF_DIR}") {
-                    input message: 'Apply Terraform changes?', ok: 'Apply'
                     sh 'terraform apply -auto-approve tfplan'
                 }
             }
@@ -60,32 +59,28 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                echo "Building Docker image for branch: ${env.BRANCH_NAME}"
                 sh "docker build -t appflask:one ./appflask"
             }
         }
 
         stage('Push to Docker Hub') {
             steps {
-                echo "Logging in to Docker Hub..."
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                    sh """
+                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                    docker tag appflask:one hengabay7/appflask:latest
+                    docker push hengabay7/appflask:latest
+                    """
+                }
+            }
         }
-            echo "Pushing Docker image to Docker Hub..."
-            sh "docker tag appflask:one hengabay7/appflask:latest"
-            sh "docker push hengabay7/appflask:latest"
-    }
-}
 
         stage('Test Application') {
-            steps {                                  
-                echo "Running tests using unittest framework"
+            steps {
                 sh 'docker run -t appflask:one sh -c "python3 -m unittest discover -s . -p test_app.py"'
             }
-        }                
+        }
 
-
-        stages {
         stage('Fetch Elastic IP') {
             steps {
                 script {
@@ -94,14 +89,14 @@ pipeline {
                     def ec2_ip = sh(
                         script: """
                         aws ec2 describe-addresses --region us-east-1 \
-                        --filters "Name=instance-id,Values=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)" \
-                        --query 'Addresses[0].PublicIp' --output text
+                        --query 'Addresses[?Tags[?Key==`Name` && Value==`Your-EC2-Instance-Name`]].PublicIp' \
+                        --output text
                         """,
                         returnStdout: true
                     ).trim()
 
                     if (!ec2_ip || ec2_ip == "None") {
-                        error "No Elastic IP found for this instance!"
+                        error "No Elastic IP found for the specified EC2 instance!"
                     }
 
                     echo "Elastic IP found: ${ec2_ip}"
@@ -110,8 +105,6 @@ pipeline {
             }
         }
 
-
-       
         stage('Deploy to EC2') {
             steps {
                 sshagent(['keypaircicd']) {
@@ -130,8 +123,7 @@ pipeline {
                 }
             }
         }
-    } 
-}
+    }
 
     post {
         success {

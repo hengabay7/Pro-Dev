@@ -118,6 +118,10 @@ resource "aws_eip" "eip" {
   domain = "vpc"
 }
 
+tags = {
+  Name = "MyElasticIP"  
+}
+
 resource "aws_eip_association" "eip_attach" {
   instance_id   = module.ec2_instance.id
   allocation_id = aws_eip.eip.id

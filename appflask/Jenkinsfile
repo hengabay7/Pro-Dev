@@ -15,8 +15,6 @@ pipeline {
             }
         }
 
-        
-
         stage('Initialize Terraform') {
             steps {
                 dir("${TF_DIR}") {
@@ -91,8 +89,8 @@ pipeline {
                         error "❌ No Elastic IP found with name 'MyElasticIP'! Please verify the Elastic IP exists."
                     }
 
-                     echo "✅ Elastic IP found: ${ec2_ip}"
-                     env.EC2_IP = ec2_ip
+                    echo "✅ Elastic IP found: ${ec2_ip}"
+                    env.EC2_IP = ec2_ip
                 }
             }
         }

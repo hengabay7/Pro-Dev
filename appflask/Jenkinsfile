@@ -106,7 +106,7 @@ pipeline {
                     ssh-keyscan -H ${EC2_IP} >> ~/.ssh/known_hosts
                     chmod 644 ~/.ssh/known_hosts
 
-                    ssh ec2-user@${EC2_IP} << 'EOF'
+                    ssh ec2-user@${EC2_IP} <<EOF 
                     echo "🔄 Stopping old container..."
                     docker stop appflask || true
                     docker rm appflask || true
@@ -119,7 +119,7 @@ pipeline {
 
                     echo "📋 Checking running containers..."
                     docker ps
-                    EOF
+EOF
                     """
                 }
             }

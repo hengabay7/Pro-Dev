@@ -81,6 +81,9 @@ pipeline {
         }
 
         stage('Fetch Elastic IP') {
+            when{
+                main
+            }
             steps {
                 script {
                     echo "Fetching EC2 Elastic IP..."
@@ -105,6 +108,9 @@ pipeline {
         }
 
         stage('Deploy to EC2') {
+            when{
+                main
+            }
             steps {
                 sshagent(['keypaircicd']) {
                     sh """

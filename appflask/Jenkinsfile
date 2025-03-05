@@ -49,6 +49,16 @@ pipeline {
             }
         }
 
+        stage('Test Application') {
+            steps {
+                sh """
+                echo "🔍 Running tests..."
+                docker run -t ${DOCKER_IMAGE}:${VERSION} sh -c "python3 -m unittest discover -s . -p test_app.py"
+                """
+            }
+        }
+
+
         stage('Build Docker Image') {
             steps {
                 sh """
@@ -59,6 +69,9 @@ pipeline {
         }
 
         stage('Push to Docker Hub') {
+            when{
+                branch 'main'
+            }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh """
@@ -71,18 +84,10 @@ pipeline {
             }
         }
 
-        stage('Test Application') {
-            steps {
-                sh """
-                echo "🔍 Running tests..."
-                docker run -t ${DOCKER_IMAGE}:${VERSION} sh -c "python3 -m unittest discover -s . -p test_app.py"
-                """
-            }
-        }
 
         stage('Fetch Elastic IP') {
             when{
-                main
+                branch 'main'
             }
             steps {
                 script {
@@ -109,7 +114,7 @@ pipeline {
 
         stage('Deploy to EC2') {
             when{
-                main
+                branch 'main'
             }
             steps {
                 sshagent(['keypaircicd']) {
@@ -141,12 +146,4 @@ EOF
         }
     }
 
-    post {
-        success {
-            echo "✅ Pipeline executed successfully with Docker image: ${DOCKER_IMAGE}:${VERSION}"
-        }
-        failure {
-            echo "❌ Pipeline failed! Check logs for details."
-        }
-    }
 }

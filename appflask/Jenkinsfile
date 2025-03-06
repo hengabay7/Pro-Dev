@@ -126,10 +126,10 @@ pipeline {
                     sh """
                     echo "🚀 Deploying to EC2 at ${EC2_IP} with image ${DOCKER_IMAGE}:${VERSION}..."
 
-                    mkdir -p ~/.ssh
-                    chmod 700 ~/.ssh
-                    sh "ssh-keyscan -H ${EC2_IP} >> ~/.ssh/known_hosts"
-                    chmod 644 ~/.ssh/known_hosts
+                    mkdir -p /var/jenkins_home/.ssh
+                    chmod 700 /var/jenkins_home/.ssh
+                    touch /var/jenkins_home/.ssh/known_hosts
+                    chmod 644 /var/jenkins_home/.ssh/known_hosts
 
                     ssh -o StrictHostKeyChecking=no ec2-user@${EC2_IP} <<EOF
                     echo "🔄 Stopping old container..."

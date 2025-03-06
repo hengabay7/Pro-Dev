@@ -7,7 +7,6 @@ pipeline {
         AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
         DOCKER_IMAGE = "hengabay7/appflask"
-        VERSION = "1.0.${env.BUILD_NUMBER}"  // גרסה דינמית לפי מספר ה-Build
     }
 
     stages {
@@ -23,7 +22,7 @@ pipeline {
                     def changes_detected = sh(script: "git diff --name-only HEAD~1 | grep 'app.py' || true", returnStdout: true).trim()
                     if (changes_detected) {
                         echo "🚀 שינוי ב-`app.py` זוהה! מריץ בדיקות..."
-                        sh "docker run -t ${DOCKER_IMAGE}:${VERSION} sh -c 'python3 app.py'"
+                        sh "docker run -t ${DOCKER_IMAGE}:feature-branch sh -c 'python3 app.py'"
                     } else {
                         echo "✅ לא זוהה שינוי בקובץ `app.py`. מדלגים על הבדיקות."
                     }
@@ -34,25 +33,25 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo "🔨 Building Docker image for testing"
-                sh "docker build -t ${DOCKER_IMAGE}:${VERSION} ./appflask"
+                sh "docker build -t ${DOCKER_IMAGE}:feature-branch ./appflask"
             }
         }
 
         stage('Push to Docker Hub') {
-            when { branch 'main' } // **ירוץ רק כאשר ה-Branch הוא main**
+            when { branch 'main' } // **Push ל-Docker Hub רק אם מדובר ב-main**
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh """
                     echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
-                    docker tag ${DOCKER_IMAGE}:${VERSION} ${DOCKER_IMAGE}:${VERSION}
-                    docker push ${DOCKER_IMAGE}:${VERSION}
+                    docker tag ${DOCKER_IMAGE}:feature-branch ${DOCKER_IMAGE}:latest
+                    docker push ${DOCKER_IMAGE}:latest
                     """
                 }
             }
         }
 
         stage('Deploy to EC2') {
-            when { branch 'main' } // **ירוץ רק ב-main**
+            when { branch 'main' } // **Deploy יתבצע רק אם מדובר ב-main**
             steps {
                 sshagent(['keypaircicd']) {
                     sh """
@@ -60,8 +59,8 @@ pipeline {
                     ssh -o StrictHostKeyChecking=no ec2-user@${EC2_IP} <<EOF
                     docker stop appflask || true
                     docker rm appflask || true
-                    docker pull ${DOCKER_IMAGE}:${VERSION}
-                    docker run -d --name appflask -p 80:5000 --restart=always ${DOCKER_IMAGE}:${VERSION}
+                    docker pull ${DOCKER_IMAGE}:latest
+                    docker run -d --name appflask -p 80:5000 --restart=always ${DOCKER_IMAGE}:latest
                     docker ps
 EOF
                     """

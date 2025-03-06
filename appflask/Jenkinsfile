@@ -65,17 +65,16 @@ pipeline {
         stage('Test Application') {
             steps {
                 script {
-                    def changes_detected = sh(script: "git diff --name-only HEAD~1 | grep 'app.py' || true", returnStdout: true).trim()
+                    def changes_detected = sh(script: "git diff --name-only HEAD^ HEAD | grep 'app.py' || true", returnStdout: true).trim()
                     if (changes_detected) {
                         echo "🚀 שינוי ב-`app.py` זוהה! מריץ בדיקות..."
                         sh "docker run -t ${DOCKER_IMAGE}:${VERSION} sh -c 'python3 app.py'"
                     } else {
-                        echo "✅ לא זוהה שינוי בקובץ `app.py` מדלגים על הבדיקות"
+                        echo "✅ לא זוהה שינוי בקובץ `app.py`, מדלגים על הבדיקות."
                     }
                 }
             }
         }
-
 
 
         stage('Push to Docker Hub') {

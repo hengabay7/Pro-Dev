@@ -29,37 +29,6 @@ pipeline {
                 echo "🔨 Building Docker image for testing"
                 sh "docker build -t ${DOCKER_IMAGE}:feature-branch ./appflask"
             }
-        }
-
-        stage('Push to Docker Hub') {
-            when { branch 'main' } // **Push ל-Docker Hub רק אם מדובר ב-main**
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh """
-                    echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
-                    docker tag ${DOCKER_IMAGE}:feature-branch ${DOCKER_IMAGE}:latest
-                    docker push ${DOCKER_IMAGE}:latest
-                    """
-                }
-            }
-        }
-
-        stage('Deploy to EC2') {
-            when { branch 'main' } // **Deploy יתבצע רק אם מדובר ב-main**
-            steps {
-                sshagent(['keypaircicd']) {
-                    sh """
-                    echo "🚀 Deploying to EC2..."
-                    ssh -o StrictHostKeyChecking=no ec2-user@${EC2_IP} <<EOF
-                    docker stop appflask || true
-                    docker rm appflask || true
-                    docker pull ${DOCKER_IMAGE}:latest
-                    docker run -d --name appflask -p 80:5000 --restart=always ${DOCKER_IMAGE}:latest
-                    docker ps
-EOF
-                    """
-                }
-            }
-        }
+        }     
     }
 }

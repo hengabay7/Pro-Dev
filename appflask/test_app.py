@@ -1,5 +1,4 @@
-i#!/usr/bin/env python3
-
+i#!/usr/bin/env python
 import unittest
 from flask import Flask
 

@@ -65,7 +65,8 @@ pipeline {
         stage('Test Application') {
             steps {
                 script {                 
-                    sh "docker run -t ${DOCKER_IMAGE}:${VERSION} sh -c 'python3 app.py'"
+                    echo "🚀 Running unit tests..."
+                    sh "python3 -m unittest SimpleTest"
                     echo "✅ All tests passed successfully!"                
                 }
             }

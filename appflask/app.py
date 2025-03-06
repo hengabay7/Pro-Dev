@@ -2,7 +2,7 @@ from flask import Flask
 
 app = Flask(__name__)
 
-@app.route('/hello hen/<name>')
+@app.route('/hello heng/<name>')
 def hello_name(name):
    return 'Hello %s!\n' % name
 

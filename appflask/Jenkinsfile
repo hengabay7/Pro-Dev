@@ -67,7 +67,7 @@ pipeline {
                 script {                 
                     sh """
                     echo "🚀 Running tests in test_app.py..."
-                    python3 -m unittest test_app.py
+                    docker run --rm -v $(pwd):/app -w /app python:3.9 python -m unittest test_app.py
                     echo "✅ All tests in test_app.py passed successfully!"
                     """                
                 }

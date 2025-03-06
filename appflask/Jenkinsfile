@@ -128,7 +128,7 @@ pipeline {
 
                     mkdir -p ~/.ssh
                     chmod 700 ~/.ssh
-                    ssh-keyscan -H ${EC2_IP} >> ~/.ssh/known_hosts
+                    sh "ssh-keyscan -H ${EC2_IP} >> ~/.ssh/known_hosts"
                     chmod 644 ~/.ssh/known_hosts
 
                     ssh -o StrictHostKeyChecking=no ec2-user@${EC2_IP} <<EOF

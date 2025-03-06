@@ -19,13 +19,8 @@ pipeline {
         stage('Test Application') {
             steps {
                 script {
-                    def changes_detected = sh(script: "git diff --name-only HEAD~1 | grep 'app.py' || true", returnStdout: true).trim()
-                    if (changes_detected) {
-                        echo "🚀 שינוי ב-`app.py` זוהה! מריץ בדיקות..."
-                        sh "docker run -t ${DOCKER_IMAGE}:feature-branch sh -c 'python3 app.py'"
-                    } else {
-                        echo "✅ לא זוהה שינוי בקובץ `app.py`. מדלגים על הבדיקות."
-                    }
+                    sh "python3 -m unittest test_app.py"
+                    echo "✅ All tests passed successfully!"
                 }
             }
         }
